@@ -21,7 +21,7 @@ service Chat {
 }
 
 message ChatRequest {
-    string name = 1;
+    string message = 1;
 }
 
 message ChatResponse {
