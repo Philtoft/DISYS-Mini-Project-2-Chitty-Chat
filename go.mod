@@ -1,4 +1,4 @@
-module github.com/Philtoft/DIS-mini-project-1
+module github.com/Philtoft/DISYS-Mini-Project-2-Chitty-Chat
 
 go 1.16
 

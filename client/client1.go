@@ -1,12 +1,9 @@
 package main
 
 import (
-	"bufio"
 	"context"
 	"fmt"
 	"log"
-	"os"
-	"strings"
 	t "time"
 
 	"github.com/Philtoft/DISYS-Mini-Project-2-Chitty-Chat/time"
@@ -18,29 +15,23 @@ type Server struct {
 }
 
 func main() {
-
+	// Creat a virtual RPC Client Connection on port  9080 WithInsecure (because  of http)
 	var conn *grpc.ClientConn
 	conn, err := grpc.Dial(":9080", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("Could not connect: %s", err)
 	}
 
+	// Defer means: When this function returns, call this method (meaing, one main is done, close connection)
 	defer conn.Close()
 
-	// c := time.NewGetCurrentTimeClient(conn)
-	c := time.NewChatClient(conn)
+	//  Create new Client from generated gRPC code from proto
+	c := time.NewGetCurrentTimeClient(conn)
 
-	// Contact the server and print out its response
-	msg := ""
-
-	ctx, cancel := context.WithTimeout(context.Background(), t.Second)
-	defer cancel()
-	r, err := c.Broadcast(ctx, &time.ChatRequest{Message: msg})
-
-	if err != nil {
-		log.Fatalf("could not get chat message: %v", err)
+	for {
+		SendGetTimeRequest(c)
+		t.Sleep(5 * t.Second)
 	}
-	log.Printf(r.GetMessage())
 }
 
 func SendGetTimeRequest(c time.GetCurrentTimeClient) {
@@ -54,17 +45,3 @@ func SendGetTimeRequest(c time.GetCurrentTimeClient) {
 
 	fmt.Printf("Current time right now: %s\n", response.Reply)
 }
-
-// func SendChatMessage(c time.ChatRequest) {
-// 	message := time.Broadcast{}
-// }
-
-func getChatInput() string {
-	reader := bufio.NewReader(os.Stdin)
-	chatMsg, _ := reader.ReadString('\n')
-	chatMsg = strings.Replace(chatMsg, "\n", "", -1)
-
-	return chatMsg
-}
-
-func GetMessages() {}
