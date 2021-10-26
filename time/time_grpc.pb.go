@@ -100,86 +100,88 @@ var GetCurrentTime_ServiceDesc = grpc.ServiceDesc{
 	Metadata: "time/time.proto",
 }
 
-// GetMessageClient is the client API for GetMessage service.
+// ChatClient is the client API for Chat service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type GetMessageClient interface {
-	GetMessage(ctx context.Context, in *GetMessageRequest, opts ...grpc.CallOption) (*GetMessageReply, error)
+type ChatClient interface {
+	// Sends a chat
+	Broadcast(ctx context.Context, in *ChatMessage, opts ...grpc.CallOption) (*ChatMessage, error)
 }
 
-type getMessageClient struct {
+type chatClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewGetMessageClient(cc grpc.ClientConnInterface) GetMessageClient {
-	return &getMessageClient{cc}
+func NewChatClient(cc grpc.ClientConnInterface) ChatClient {
+	return &chatClient{cc}
 }
 
-func (c *getMessageClient) GetMessage(ctx context.Context, in *GetMessageRequest, opts ...grpc.CallOption) (*GetMessageReply, error) {
-	out := new(GetMessageReply)
-	err := c.cc.Invoke(ctx, "/time.getMessage/getMessage", in, out, opts...)
+func (c *chatClient) Broadcast(ctx context.Context, in *ChatMessage, opts ...grpc.CallOption) (*ChatMessage, error) {
+	out := new(ChatMessage)
+	err := c.cc.Invoke(ctx, "/time.Chat/Broadcast", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// GetMessageServer is the server API for GetMessage service.
-// All implementations must embed UnimplementedGetMessageServer
+// ChatServer is the server API for Chat service.
+// All implementations must embed UnimplementedChatServer
 // for forward compatibility
-type GetMessageServer interface {
-	GetMessage(context.Context, *GetMessageRequest) (*GetMessageReply, error)
-	mustEmbedUnimplementedGetMessageServer()
+type ChatServer interface {
+	// Sends a chat
+	Broadcast(context.Context, *ChatMessage) (*ChatMessage, error)
+	mustEmbedUnimplementedChatServer()
 }
 
-// UnimplementedGetMessageServer must be embedded to have forward compatible implementations.
-type UnimplementedGetMessageServer struct {
+// UnimplementedChatServer must be embedded to have forward compatible implementations.
+type UnimplementedChatServer struct {
 }
 
-func (UnimplementedGetMessageServer) GetMessage(context.Context, *GetMessageRequest) (*GetMessageReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetMessage not implemented")
+func (UnimplementedChatServer) Broadcast(context.Context, *ChatMessage) (*ChatMessage, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Broadcast not implemented")
 }
-func (UnimplementedGetMessageServer) mustEmbedUnimplementedGetMessageServer() {}
+func (UnimplementedChatServer) mustEmbedUnimplementedChatServer() {}
 
-// UnsafeGetMessageServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to GetMessageServer will
+// UnsafeChatServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to ChatServer will
 // result in compilation errors.
-type UnsafeGetMessageServer interface {
-	mustEmbedUnimplementedGetMessageServer()
+type UnsafeChatServer interface {
+	mustEmbedUnimplementedChatServer()
 }
 
-func RegisterGetMessageServer(s grpc.ServiceRegistrar, srv GetMessageServer) {
-	s.RegisterService(&GetMessage_ServiceDesc, srv)
+func RegisterChatServer(s grpc.ServiceRegistrar, srv ChatServer) {
+	s.RegisterService(&Chat_ServiceDesc, srv)
 }
 
-func _GetMessage_GetMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetMessageRequest)
+func _Chat_Broadcast_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ChatMessage)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(GetMessageServer).GetMessage(ctx, in)
+		return srv.(ChatServer).Broadcast(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/time.getMessage/getMessage",
+		FullMethod: "/time.Chat/Broadcast",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GetMessageServer).GetMessage(ctx, req.(*GetMessageRequest))
+		return srv.(ChatServer).Broadcast(ctx, req.(*ChatMessage))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// GetMessage_ServiceDesc is the grpc.ServiceDesc for GetMessage service.
+// Chat_ServiceDesc is the grpc.ServiceDesc for Chat service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var GetMessage_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "time.getMessage",
-	HandlerType: (*GetMessageServer)(nil),
+var Chat_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "time.Chat",
+	HandlerType: (*ChatServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "getMessage",
-			Handler:    _GetMessage_GetMessage_Handler,
+			MethodName: "Broadcast",
+			Handler:    _Chat_Broadcast_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

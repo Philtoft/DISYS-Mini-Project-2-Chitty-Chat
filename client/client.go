@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	t "time"
 
 	"github.com/Philtoft/DIS-mini-project-1/time"
 	"google.golang.org/grpc"
@@ -24,30 +25,15 @@ func main() {
 	// Defer means: When this function returns, call this method (meaing, one main is done, close connection)
 	defer conn.Close()
 
-	reader := bufio.NewReader(os.Stdin)
+	//  Create new Client from generated gRPC code from proto
+	c := time.NewGetCurrentTimeClient(conn)
+
 	fmt.Println("Chat room")
 
 	for {
-		fmt.Print("")
-		chatMsg, _ := reader.ReadString('\n')
-		// convert CRLF to LF
-		chatMsg = strings.Replace(chatMsg, "\n", "", -1)
-
-		SendChatMessage(chatMsg)
-		// GetMessages()
+		SendGetTimeRequest(c)
+		t.Sleep(1 * t.Second)
 	}
-
-	// if strings.Compare("hi", text) == 0 {
-	// 	fmt.Println("hello, Yourself")
-	// }
-
-	// //  Create new Client from generated gRPC code from proto
-	// c := time.NewGetCurrentTimeClient(conn)
-
-	// for {
-	// 	SendGetTimeRequest(c)
-	// 	t.Sleep(1 * t.Second)
-	// }
 }
 
 func SendGetTimeRequest(c time.GetCurrentTimeClient) {
@@ -62,8 +48,16 @@ func SendGetTimeRequest(c time.GetCurrentTimeClient) {
 	fmt.Printf("Current time right now: %s\n", response.Reply)
 }
 
-func SendChatMessage(msg string) {
+func SendChatMessage(msg string, c time) {
 
+}
+
+func getChatInput() string {
+	reader := bufio.NewReader(os.Stdin)
+	chatMsg, _ := reader.ReadString('\n')
+	chatMsg = strings.Replace(chatMsg, "\n", "", -1)
+
+	return chatMsg
 }
 
 func GetMessages() {}
