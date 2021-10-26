@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package time;
-option go_package = "https://github.com/Philtoft/DIS-mini-project-1;time";
+option go_package = "https://github.com/Philtoft/DISYS-Mini-Project-2-Chitty-Chat;time";
 
 service getCurrentTime {
     rpc getTime (GetTimeRequest) returns (GetTimeReply) {}
