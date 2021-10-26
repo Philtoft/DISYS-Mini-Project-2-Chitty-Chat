@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package time;
+option go_package = "https://github.itu.dk/phhy/DIS2;time";
+
+
+service getCurrentTime {
+    rpc getTime (GetTimeRequest) returns (GetTimeReply) {}
+}
+
+message GetTimeRequest {}
+
+message GetTimeReply {
+    string reply = 1;
+}
