@@ -7,6 +7,7 @@ import (
 	"net"
 	t "time"
 
+	"github.com/Philtoft/DIS-mini-project-1/time"
 	"github.com/Philtoft/DISYS-Mini-Project-2-Chitty-Chat/time"
 
 	"google.golang.org/grpc"
@@ -41,7 +42,7 @@ func (s *Server) GetTime(ctx context.Context, in *time.GetTimeRequest) (*time.Ge
 	return &time.GetTimeReply{Reply: t.Now().String()}, nil
 }
 
-func (s *Server) Broadcast(ctx context.Context, chatMsg string) (*time.GetTimeReply, error) {
+func (s *Server) Broadcast(ctx context.Context, in *time.ChatRequest) (*time.ChatRequest, error) {
 	fmt.Println("Message Received", chatMsg)
 	return &time.GetTimeReply{Reply: t.Now().String()}, nil
 	// Must return the message and timestamp
