@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package time;
+option go_package = "https://github.com/Philtoft/DIS-mini-project-1;time";
+
+service getCurrentTime {
+    rpc getTime (GetTimeRequest) returns (GetTimeReply) {}
+}
+
+message GetTimeRequest {}
+
+message GetTimeReply {
+    string reply = 1;
+}
+
+
+
+service Chat {
+    // rpc getMessage (GetMessageRequest) returns (GetMessageReply) {}
+    // Sends a chat
+    rpc Publish ()
+}
