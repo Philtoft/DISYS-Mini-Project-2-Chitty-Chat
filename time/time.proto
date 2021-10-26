@@ -13,17 +13,17 @@ message GetTimeReply {
     string reply = 1;
 }
 
-
-
 service Chat {
     // Sends a chat
     rpc Broadcast (ChatRequest) returns (ChatResponse);
 }
 
+// The request that contains the chat message from the user
 message ChatRequest {
     string message = 1;
 }
 
+//The response chat message containing the message
 message ChatResponse {
     string message = 1;
 }
