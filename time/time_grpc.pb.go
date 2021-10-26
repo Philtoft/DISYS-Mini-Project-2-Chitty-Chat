@@ -105,7 +105,7 @@ var GetCurrentTime_ServiceDesc = grpc.ServiceDesc{
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ChatClient interface {
 	// Sends a chat
-	Broadcast(ctx context.Context, in *ChatMessage, opts ...grpc.CallOption) (*ChatMessage, error)
+	Broadcast(ctx context.Context, in *ChatRequest, opts ...grpc.CallOption) (*ChatResponse, error)
 }
 
 type chatClient struct {
@@ -116,8 +116,8 @@ func NewChatClient(cc grpc.ClientConnInterface) ChatClient {
 	return &chatClient{cc}
 }
 
-func (c *chatClient) Broadcast(ctx context.Context, in *ChatMessage, opts ...grpc.CallOption) (*ChatMessage, error) {
-	out := new(ChatMessage)
+func (c *chatClient) Broadcast(ctx context.Context, in *ChatRequest, opts ...grpc.CallOption) (*ChatResponse, error) {
+	out := new(ChatResponse)
 	err := c.cc.Invoke(ctx, "/time.Chat/Broadcast", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -130,7 +130,7 @@ func (c *chatClient) Broadcast(ctx context.Context, in *ChatMessage, opts ...grp
 // for forward compatibility
 type ChatServer interface {
 	// Sends a chat
-	Broadcast(context.Context, *ChatMessage) (*ChatMessage, error)
+	Broadcast(context.Context, *ChatRequest) (*ChatResponse, error)
 	mustEmbedUnimplementedChatServer()
 }
 
@@ -138,7 +138,7 @@ type ChatServer interface {
 type UnimplementedChatServer struct {
 }
 
-func (UnimplementedChatServer) Broadcast(context.Context, *ChatMessage) (*ChatMessage, error) {
+func (UnimplementedChatServer) Broadcast(context.Context, *ChatRequest) (*ChatResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Broadcast not implemented")
 }
 func (UnimplementedChatServer) mustEmbedUnimplementedChatServer() {}
@@ -155,7 +155,7 @@ func RegisterChatServer(s grpc.ServiceRegistrar, srv ChatServer) {
 }
 
 func _Chat_Broadcast_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ChatMessage)
+	in := new(ChatRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -167,7 +167,7 @@ func _Chat_Broadcast_Handler(srv interface{}, ctx context.Context, dec func(inte
 		FullMethod: "/time.Chat/Broadcast",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ChatServer).Broadcast(ctx, req.(*ChatMessage))
+		return srv.(ChatServer).Broadcast(ctx, req.(*ChatRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

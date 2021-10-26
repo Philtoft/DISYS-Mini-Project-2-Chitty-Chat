@@ -32,6 +32,7 @@ func main() {
 
 	for {
 		SendGetTimeRequest(c)
+		SendChatMessage(c)
 		t.Sleep(1 * t.Second)
 	}
 }
@@ -48,8 +49,8 @@ func SendGetTimeRequest(c time.GetCurrentTimeClient) {
 	fmt.Printf("Current time right now: %s\n", response.Reply)
 }
 
-func SendChatMessage(msg string, c time) {
-
+func SendChatMessage(c time.ChatRequest) {
+	message := time.ChatMessage{}
 }
 
 func getChatInput() string {

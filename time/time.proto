@@ -17,15 +17,9 @@ message GetTimeReply {
 
 service Chat {
     // Sends a chat
-    rpc Broadcast (ChatMessage) returns (ChatMessage);
+    rpc Broadcast (ChatRequest) returns (ChatResponse);
 }
 
-message ChatMessage {
-    string message = 1;
-}
+message ChatRequest {}
 
-// message ChatRequest {
-//     string message = 1;
-// }
-
-// message ChatResponse {}
+message ChatResponse {}
