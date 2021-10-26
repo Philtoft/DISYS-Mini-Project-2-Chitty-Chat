@@ -42,8 +42,7 @@ func (s *Server) GetTime(ctx context.Context, in *time.GetTimeRequest) (*time.Ge
 	return &time.GetTimeReply{Reply: t.Now().String()}, nil
 }
 
-func (s *Server) Broadcast(ctx context.Context, in *time.ChatRequest) (*time.ChatRequest, error) {
-	fmt.Println("Message Received", chatMsg)
-	return &time.GetTimeReply{Reply: t.Now().String()}, nil
-	// Must return the message and timestamp
+func (s *Server) Broadcast(ctx context.Context, in *time.ChatRequest) (*time.ChatResponse, error) {
+	fmt.Println("Message Received", in.GetMessage())
+	return &time.ChatResponse{Message: in.GetMessage()}, nil
 }
