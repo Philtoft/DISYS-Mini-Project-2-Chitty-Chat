@@ -13,3 +13,11 @@ message GetTimeRequest {}
 message GetTimeReply {
     string reply = 1;
 }
+
+service chat {
+    rpc sendChat (Message) returns (Message) {}
+}
+
+message Message {
+    string sender = 1;
+}
