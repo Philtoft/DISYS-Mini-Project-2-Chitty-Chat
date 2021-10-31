@@ -15,9 +15,11 @@ message GetTimeReply {
 }
 
 service chat {
-    rpc sendChat (Message) returns (Message) {}
+    rpc sendChat (Message) returns (Nothing) {}
 }
 
 message Message {
-    string sender = 1;
+    string message = 1;
 }
+
+message Nothing {}

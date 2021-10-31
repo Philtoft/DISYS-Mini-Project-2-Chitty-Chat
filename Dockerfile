@@ -13,4 +13,4 @@ RUN cd /build/DISYS-Mini-Project-2-Chitty-Chat/server && go build ./server.go
 
 EXPOSE 9080
 
-ENTRYPOINT  "/build/DISYS-Mini-Project-2-Chitty-Chat/server/server" ]
+ENTRYPOINT  "/build/DISYS-Mini-b
