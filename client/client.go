@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"log"
 
-	t "time"
-
 	"github.com/Philtoft/DISYS-Mini-Project-2-Chitty-Chat/time"
 	"google.golang.org/grpc"
 )
@@ -23,12 +21,29 @@ func main() {
 	defer conn.Close()
 
 	//  Create new Client from generated gRPC code from proto
-	c := time.NewGetCurrentTimeClient(conn)
+	// c := time.NewGetCurrentTimeClient(conn)
+	c := time.NewChatClient(conn)
 
-	for {
-		SendGetTimeRequest(c)
-		t.Sleep(5 * t.Second)
+	// message := "Hello!"
+
+	SendChat(c)
+
+	// for {
+	// 	SendGetTimeRequest(c)
+	// 	t.Sleep(5 * t.Second)
+	// }
+}
+
+func SendChat(c time.ChatClient) {
+	message := time.Message{Message: "Hello world"}
+
+	response, err := c.SendMessage(context.Background(), &message)
+
+	if err != nil {
+		log.Fatalf("Error when calling SendMessage: %s", err)
 	}
+
+	fmt.Printf("Message send!")
 }
 
 func SendGetTimeRequest(c time.GetCurrentTimeClient) {
