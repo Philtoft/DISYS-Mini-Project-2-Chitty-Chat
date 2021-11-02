@@ -3,10 +3,6 @@ syntax = "proto3";
 package proto;
 option go_package = "https://github.itu.dk/phhy/DIS2;time";
 
-service chat {
-    rpc sendChat (Message) returns (Message) {}
-}
-
 message User {
     string id = 1;
     string name = 2;
