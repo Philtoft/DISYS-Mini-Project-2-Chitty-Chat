@@ -5,22 +5,46 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
 	t "time"
 
-	"github.com/Philtoft/DISYS-Mini-Project-2-Chitty-Chat/time"
+	service "github.com/Philtoft/DISYS-Mini-Project-2-Chitty-Chat/service"
 	"google.golang.org/grpc"
+	glog "google.golang.org/grpc/grpclog"
 )
 
 /*
 * TODO: Make connection into channels
 * TODO: Apply Lamport timestamp
  */
-type Server struct {
-	time.UnimplementedGetCurrentTimeServer
+
+type Connection struct {
+	// Fatter ikke denne del
+	stream service.Broadcast_CreateStreamServer
+	id     string
+	active bool
 }
 
-type Server1 struct {
-	time.UnimplementedChatServer
+type Server struct {
+	// array of connections with a reference to the connection location in memory
+	Connection []*Connection
+}
+
+var grpcLog glog.LoggerV2
+
+func init() {
+	grpcLog = glog.NewLoggerV2(os.Stdout, os.Stdout, os.Stdout)
+}
+
+func (s *Server) CreateStream(pconn *service.Connect, stream service.Broadcast_CreateStreamServer) error {
+	conn := &Connection{
+		stream: stream,
+		id:     pconn.User.Id,
+		active: true,
+		// TODO: Reasearch if this error: make(chan error),
+	}
+
+	s.Connection = append(s.Connection, conn)
 }
 
 func main() {

@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package proto;
-// option go_package = "https://github.itu.dk/phhy/DIS2;time";
+option go_package = "https://github.itu.dk/phhy/DIS2;time";
 
 service chat {
     rpc sendChat (Message) returns (Message) {}
@@ -18,7 +18,7 @@ message Message {
     string timestamp = 3;
 }
 
-message Conncet {
+message Connect {
     User user = 1;
     bool active = 2;
 }
@@ -29,8 +29,3 @@ service Broadcast {
     rpc CreateStream(Connect) returns (stream Message);
     rpc BroadcastStream(Message) returns (Close);
 }
-
-// message Channel {
-//     string sender = 1;
-//     string message = 2;
-// }
