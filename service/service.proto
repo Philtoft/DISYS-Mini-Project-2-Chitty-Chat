@@ -9,7 +9,7 @@ message User {
 }
 
 message Message {
-    string message = 1;
+    string id = 1;
     string content = 2;
     string timestamp = 3;
 }

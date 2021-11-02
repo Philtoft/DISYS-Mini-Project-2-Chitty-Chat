@@ -8,7 +8,7 @@ import (
 	"sync"
 
 	service "github.com/Philtoft/DISYS-Mini-Project-2-Chitty-Chat/service"
-	"google.golang.org/grpc"
+	grpc "google.golang.org/grpc"
 	glog "google.golang.org/grpc/grpclog"
 )
 
@@ -26,7 +26,6 @@ type Connection struct {
 }
 
 type Server struct {
-	// array of connections with a reference to the connection location in memory
 	Connection []*Connection
 }
 
@@ -84,7 +83,6 @@ func (s *Server) BroadcastMessage(ctx context.Context, msg *service.Message) (*s
 }
 
 func main() {
-
 	var connections []*Connection
 
 	server := &Server{connections}
@@ -99,4 +97,5 @@ func main() {
 
 	service.RegisterBroadcastServer(grpcServer, server)
 	grpcServer.Serve(listener)
+
 }
