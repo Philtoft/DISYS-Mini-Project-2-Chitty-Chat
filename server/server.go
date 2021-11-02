@@ -2,11 +2,10 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net"
 	"os"
-	t "time"
+	"sync"
 
 	service "github.com/Philtoft/DISYS-Mini-Project-2-Chitty-Chat/service"
 	"google.golang.org/grpc"
@@ -23,6 +22,7 @@ type Connection struct {
 	stream service.Broadcast_CreateStreamServer
 	id     string
 	active bool
+	error  chan error
 }
 
 type Server struct {
@@ -41,35 +41,62 @@ func (s *Server) CreateStream(pconn *service.Connect, stream service.Broadcast_C
 		stream: stream,
 		id:     pconn.User.Id,
 		active: true,
-		// TODO: Reasearch if this error: make(chan error),
+		error:  make(chan error),
 	}
 
 	s.Connection = append(s.Connection, conn)
+
+	return <-conn.error
+
+}
+
+func (s *Server) BroadcastMessage(ctx context.Context, msg *service.Message) (*service.Close, error) {
+
+	wait := sync.WaitGroup{}
+	done := make(chan int)
+
+	for _, conn := range s.Connection {
+		wait.Add(1)
+
+		go func(msg *service.Message, conn *Connection) {
+			defer wait.Done()
+
+			if conn.active {
+				err := conn.stream.Send(msg)
+				grpcLog.Info("Sending message to: ", conn.stream)
+
+				if err != nil {
+					grpcLog.Errorf("Error with Stream: %v - Error: %v", conn.stream, err)
+					conn.active = false
+					conn.error <- err
+				}
+			}
+		}(msg, conn)
+	}
+
+	go func() {
+		wait.Wait()
+		close(done)
+	}()
+
+	<-done
+	return &service.Close{}, nil
 }
 
 func main() {
-	// Create listener tcp on port 9080
-	list, err := net.Listen("tcp", ":9080")
-	if err != nil {
-		log.Fatalf("Failed to listen on port 9080: %v", err)
-	}
+
+	var connections []*Connection
+
+	server := &Server{connections}
+
 	grpcServer := grpc.NewServer()
-	time.RegisterGetCurrentTimeServer(grpcServer, &Server{})
-	time.RegisterChatServer(grpcServer, &Server1{})
-
-	if err := grpcServer.Serve(list); err != nil {
-		log.Fatalf("failed to server %v", err)
+	listener, err := net.Listen("tcp", ":8080")
+	if err != nil {
+		log.Fatalf("error creating the server %v", err)
 	}
-}
 
-func (s *Server) GetTime(ctx context.Context, in *time.GetTimeRequest) (*time.GetTimeReply, error) {
-	fmt.Printf("Received GetTime request\n")
-	return &time.GetTimeReply{Reply: t.Now().String()}, nil
-}
+	grpcLog.Info("Starting server at port :8080")
 
-// Overvej om den skal have et bedre navn
-func (s *Server1) SendChat(ctx context.Context, in *time.Message) (*time.Message, error) {
-	// Hvordan får jeg vist beskeden, der kommer ind?
-	fmt.Println("Received message:", in.GetMessage())
-	return &time.Message{Message: in.GetMessage()}, nil
+	service.RegisterBroadcastServer(grpcServer, server)
+	grpcServer.Serve(listener)
 }

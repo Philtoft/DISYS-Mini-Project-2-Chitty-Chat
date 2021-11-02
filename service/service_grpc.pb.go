@@ -105,7 +105,7 @@ var Chat_ServiceDesc = grpc.ServiceDesc{
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type BroadcastClient interface {
 	CreateStream(ctx context.Context, in *Connect, opts ...grpc.CallOption) (Broadcast_CreateStreamClient, error)
-	BroadcastStream(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Close, error)
+	BroadcastMessage(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Close, error)
 }
 
 type broadcastClient struct {
@@ -148,9 +148,9 @@ func (x *broadcastCreateStreamClient) Recv() (*Message, error) {
 	return m, nil
 }
 
-func (c *broadcastClient) BroadcastStream(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Close, error) {
+func (c *broadcastClient) BroadcastMessage(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Close, error) {
 	out := new(Close)
-	err := c.cc.Invoke(ctx, "/proto.Broadcast/BroadcastStream", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/proto.Broadcast/BroadcastMessage", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +162,7 @@ func (c *broadcastClient) BroadcastStream(ctx context.Context, in *Message, opts
 // for forward compatibility
 type BroadcastServer interface {
 	CreateStream(*Connect, Broadcast_CreateStreamServer) error
-	BroadcastStream(context.Context, *Message) (*Close, error)
+	BroadcastMessage(context.Context, *Message) (*Close, error)
 	mustEmbedUnimplementedBroadcastServer()
 }
 
@@ -173,8 +173,8 @@ type UnimplementedBroadcastServer struct {
 func (UnimplementedBroadcastServer) CreateStream(*Connect, Broadcast_CreateStreamServer) error {
 	return status.Errorf(codes.Unimplemented, "method CreateStream not implemented")
 }
-func (UnimplementedBroadcastServer) BroadcastStream(context.Context, *Message) (*Close, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method BroadcastStream not implemented")
+func (UnimplementedBroadcastServer) BroadcastMessage(context.Context, *Message) (*Close, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BroadcastMessage not implemented")
 }
 func (UnimplementedBroadcastServer) mustEmbedUnimplementedBroadcastServer() {}
 
@@ -210,20 +210,20 @@ func (x *broadcastCreateStreamServer) Send(m *Message) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func _Broadcast_BroadcastStream_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Broadcast_BroadcastMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Message)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(BroadcastServer).BroadcastStream(ctx, in)
+		return srv.(BroadcastServer).BroadcastMessage(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/proto.Broadcast/BroadcastStream",
+		FullMethod: "/proto.Broadcast/BroadcastMessage",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BroadcastServer).BroadcastStream(ctx, req.(*Message))
+		return srv.(BroadcastServer).BroadcastMessage(ctx, req.(*Message))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -236,8 +236,8 @@ var Broadcast_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*BroadcastServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "BroadcastStream",
-			Handler:    _Broadcast_BroadcastStream_Handler,
+			MethodName: "BroadcastMessage",
+			Handler:    _Broadcast_BroadcastMessage_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
