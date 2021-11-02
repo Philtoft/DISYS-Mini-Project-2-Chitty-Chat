@@ -1,13 +1,18 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"log"
+	"os"
+	"strings"
 
 	"github.com/Philtoft/DISYS-Mini-Project-2-Chitty-Chat/time"
 	"google.golang.org/grpc"
 )
+
+// På sigt: lav om til channels
 
 func main() {
 	// Creat a virtual RPC Client Connection on port  9080 WithInsecure (because  of http)
@@ -24,36 +29,26 @@ func main() {
 	// c := time.NewGetCurrentTimeClient(conn)
 	c := time.NewChatClient(conn)
 
-	// message := "Hello!"
+	for {
+		// Needs to send message over channel
+		// Needs to print message it receives over the channel
+		SendChat(c)
 
-	SendChat(c)
-
-	// for {
-	// 	SendGetTimeRequest(c)
-	// 	t.Sleep(5 * t.Second)
-	// }
+	}
 }
 
 func SendChat(c time.ChatClient) {
-	message := time.Message{Message: "Hello world"}
 
-	response, err := c.SendMessage(context.Background(), &message)
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Println("Insert message")
+	text, _ := reader.ReadString('\n')
+	text = strings.Replace(text, "\n", "", -1)
+
+	message := time.Message{Message: text}
+
+	_, err := c.SendChat(context.Background(), &message)
 
 	if err != nil {
 		log.Fatalf("Error when calling SendMessage: %s", err)
 	}
-
-	fmt.Printf("Message send!")
-}
-
-func SendGetTimeRequest(c time.GetCurrentTimeClient) {
-	// Between the curly brackets are nothing, because the .proto file expects no input.
-	message := time.GetTimeRequest{}
-
-	response, err := c.GetTime(context.Background(), &message)
-	if err != nil {
-		log.Fatalf("Error when calling GetTime: %s", err)
-	}
-
-	fmt.Printf("Current time right now: %s\n", response.Reply)
 }

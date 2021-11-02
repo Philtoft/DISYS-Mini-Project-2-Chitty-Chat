@@ -15,10 +15,12 @@ message GetTimeReply {
 }
 
 service chat {
-    rpc sendChat (Message) returns (Nothing) {}
+    rpc sendChat (Message) returns (Message) {}
 }
 
 message Message {
+    // message needs to be send over a channel
+    // Needs to include timestamp
     string message = 1;
 }
 
