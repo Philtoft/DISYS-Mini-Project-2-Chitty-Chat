@@ -46,9 +46,10 @@ func SendChat(c time.ChatClient) {
 
 	message := time.Message{Message: text}
 
-	_, err := c.SendChat(context.Background(), &message)
+	responseMsg, err := c.SendChat(context.Background(), &message)
 
 	if err != nil {
 		log.Fatalf("Error when calling SendMessage: %s", err)
 	}
+	fmt.Println("Someone says: ", responseMsg)
 }

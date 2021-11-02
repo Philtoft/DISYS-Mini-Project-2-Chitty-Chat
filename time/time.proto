@@ -24,4 +24,7 @@ message Message {
     string message = 1;
 }
 
-message Nothing {}
+message Channel {
+    string sender = 1;
+    string message = 2;
+}

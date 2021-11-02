@@ -44,8 +44,8 @@ func (s *Server) GetTime(ctx context.Context, in *time.GetTimeRequest) (*time.Ge
 }
 
 // Overvej om den skal have et bedre navn
-func (s *Server1) SendChat(ctx context.Context, in *time.Message) (*time.Nothing, error) {
+func (s *Server1) SendChat(ctx context.Context, in *time.Message) (*time.Message, error) {
 	// Hvordan får jeg vist beskeden, der kommer ind?
 	fmt.Println("Received message:", in.GetMessage())
-	return &time.Nothing{}, nil
+	return &time.Message{Message: in.GetMessage()}, nil
 }
