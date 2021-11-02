@@ -6,3 +6,6 @@ protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=p
 # Docker commands
 - Build docker container: ``` docker build -t test . ```
 - Run docker container ``` docker run -p 9080:9080 -tid test ```
+
+[Tutorial to follow](https://www.youtube.com/watch?v=mML6GiOAM1w&ab_channel=TensorProgramming)
+

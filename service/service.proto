@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package proto;
+// option go_package = "https://github.itu.dk/phhy/DIS2;time";
+
+service chat {
+    rpc sendChat (Message) returns (Message) {}
+}
+
+message User {
+    string id = 1;
+    string name = 2;
+}
+
+message Message {
+    string message = 1;
+    string content = 2;
+    string timestamp = 3;
+}
+
+message Conncet {
+    User user = 1;
+    bool active = 2;
+}
+
+message Close {}
+
+service Broadcast {
+    rpc CreateStream(Connect) returns (stream Message);
+    rpc BroadcastStream(Message) returns (Close);
+}
+
+// message Channel {
+//     string sender = 1;
+//     string message = 2;
+// }
