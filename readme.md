@@ -18,3 +18,7 @@ protoc
     --proto_path=service 
     --proto_path=. 
     --go_out=plugins=grpc:proto service.proto
+
+# protoc command 3
+## protoc -I="." --go_out="." "service/service.proto"
+## protoc --go-grpc_out="." service/service.proto

@@ -1,7 +1,9 @@
 syntax = "proto3";
 
+// option go_package = "https://github.itu.dk/phhy/DIS2;time";
+option go_package = "./service";
+
 package proto;
-option go_package = "https://github.itu.dk/phhy/DIS2;time";
 
 message User {
     string id = 1;
@@ -12,16 +14,30 @@ message Message {
     string id = 1;
     string content = 2;
     string timestamp = 3;
+    int32 lamport = 4;
 }
 
-message Connect {
+message ConnectRequest {
     User user = 1;
     bool active = 2;
 }
 
-message Close {}
+message DisconnectRequest {
+    User user = 1;
+    int32 lamport = 2;
+}
+
+message Close {
+    int32 lamport = 1;
+}
+
+message Complete {
+    int32 lamport = 1;
+}
 
 service Broadcast {
-    rpc CreateStream(Connect) returns (stream Message);
+    rpc CreateStream(ConnectRequest) returns (stream Message);
+    rpc DisconnectStream (DisconnectRequest) returns (Close);
     rpc BroadcastMessage(Message) returns (Close);
+    rpc Publish(Message) returns (Close);
 }
