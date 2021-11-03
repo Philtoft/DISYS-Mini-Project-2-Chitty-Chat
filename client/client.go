@@ -3,53 +3,104 @@ package main
 import (
 	"bufio"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"flag"
 	"fmt"
 	"log"
 	"os"
-	"strings"
+	"sync"
+	"time"
 
-	"github.com/Philtoft/DISYS-Mini-Project-2-Chitty-Chat/time"
+	service "github.com/Philtoft/DISYS-Mini-Project-2-Chitty-Chat/service"
 	"google.golang.org/grpc"
 )
 
-// På sigt: lav om til channels
+var client service.BroadcastClient
+var wait *sync.WaitGroup
 
-func main() {
-	// Creat a virtual RPC Client Connection on port  9080 WithInsecure (because  of http)
-	var conn *grpc.ClientConn
-	conn, err := grpc.Dial(":9080", grpc.WithInsecure())
-	if err != nil {
-		log.Fatalf("Could not connect: %s", err)
-	}
-
-	// Defer means: When this function returns, call this method (meaing, one main is done, close connection)
-	defer conn.Close()
-
-	//  Create new Client from generated gRPC code from proto
-	// c := time.NewGetCurrentTimeClient(conn)
-	c := time.NewChatClient(conn)
-
-	for {
-		// Needs to send message over channel
-		// Needs to print message it receives over the channel
-		SendChat(c)
-
-	}
+func init() {
+	wait = &sync.WaitGroup{}
 }
 
-func SendChat(c time.ChatClient) {
+func connect(user *service.User) error {
+	var streamerror error
 
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Println("Insert message")
-	text, _ := reader.ReadString('\n')
-	text = strings.Replace(text, "\n", "", -1)
-
-	message := time.Message{Message: text}
-
-	responseMsg, err := c.SendChat(context.Background(), &message)
+	stream, err := client.CreateStream(context.Background(), &service.Connect{
+		User:   user,
+		Active: true,
+	})
 
 	if err != nil {
-		log.Fatalf("Error when calling SendMessage: %s", err)
+		return fmt.Errorf("connection failed: %v", err)
 	}
-	fmt.Println("Someone says: ", responseMsg)
+
+	wait.Add(1)
+	go func(str service.Broadcast_CreateStreamClient) {
+		defer wait.Done()
+
+		for {
+			msg, err := str.Recv()
+			if err != nil {
+				streamerror = fmt.Errorf("Error reading message: %v", err)
+				break
+			}
+
+			fmt.Printf("%v : %s\n", msg.Id, msg.Content)
+
+		}
+	}(stream)
+
+	return streamerror
+}
+
+func main() {
+	timestamp := time.Now()
+	done := make(chan int)
+
+	name := flag.String("N", "Anon", "The name of the user")
+	flag.Parse()
+
+	id := sha256.Sum256([]byte(timestamp.String() + *name))
+
+	conn, err := grpc.Dial("localhost:8080", grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("Couldnt connect to service: %v", err)
+	}
+
+	client = service.NewBroadcastClient(conn)
+	user := &service.User{
+		Id:   hex.EncodeToString(id[:]),
+		Name: *name,
+	}
+
+	connect(user)
+
+	wait.Add(1)
+	go func() {
+		defer wait.Done()
+
+		scanner := bufio.NewScanner(os.Stdin)
+		for scanner.Scan() {
+			msg := &service.Message{
+				Id:        user.Id,
+				Content:   scanner.Text(),
+				Timestamp: timestamp.String(),
+			}
+
+			_, err := client.BroadcastMessage(context.Background(), msg)
+			if err != nil {
+				fmt.Printf("Error Sending Message: %v", err)
+				break
+			}
+		}
+
+	}()
+
+	go func() {
+		wait.Wait()
+		close(done)
+	}()
+
+	<-done
 }
