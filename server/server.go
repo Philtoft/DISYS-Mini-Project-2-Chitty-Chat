@@ -40,12 +40,12 @@ type Server struct {
 
 func main() {
 
-	done = make(chan int)
-
 	listener, err := net.Listen("tcp", ":9080")
 	if err != nil {
 		log.Fatalf("Error creating the server %v", err)
 	}
+
+	done = make(chan int)
 
 	grpcServer = grpc.NewServer()
 
