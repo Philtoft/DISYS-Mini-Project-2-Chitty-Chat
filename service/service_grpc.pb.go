@@ -18,8 +18,12 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type BroadcastClient interface {
-	CreateStream(ctx context.Context, in *Connect, opts ...grpc.CallOption) (Broadcast_CreateStreamClient, error)
-	BroadcastMessage(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Close, error)
+	// =JoinChannel
+	CreateStream(ctx context.Context, in *Channel, opts ...grpc.CallOption) (Broadcast_CreateStreamClient, error)
+	// = LeaveChannel
+	LeaveStream(ctx context.Context, in *Channel, opts ...grpc.CallOption) (Broadcast_LeaveStreamClient, error)
+	// =SendMessage
+	BroadcastMessage(ctx context.Context, in *Message, opts ...grpc.CallOption) (*MessageResponse, error)
 }
 
 type broadcastClient struct {
@@ -30,7 +34,7 @@ func NewBroadcastClient(cc grpc.ClientConnInterface) BroadcastClient {
 	return &broadcastClient{cc}
 }
 
-func (c *broadcastClient) CreateStream(ctx context.Context, in *Connect, opts ...grpc.CallOption) (Broadcast_CreateStreamClient, error) {
+func (c *broadcastClient) CreateStream(ctx context.Context, in *Channel, opts ...grpc.CallOption) (Broadcast_CreateStreamClient, error) {
 	stream, err := c.cc.NewStream(ctx, &Broadcast_ServiceDesc.Streams[0], "/proto.Broadcast/CreateStream", opts...)
 	if err != nil {
 		return nil, err
@@ -62,8 +66,40 @@ func (x *broadcastCreateStreamClient) Recv() (*Message, error) {
 	return m, nil
 }
 
-func (c *broadcastClient) BroadcastMessage(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Close, error) {
-	out := new(Close)
+func (c *broadcastClient) LeaveStream(ctx context.Context, in *Channel, opts ...grpc.CallOption) (Broadcast_LeaveStreamClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Broadcast_ServiceDesc.Streams[1], "/proto.Broadcast/LeaveStream", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &broadcastLeaveStreamClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type Broadcast_LeaveStreamClient interface {
+	Recv() (*Message, error)
+	grpc.ClientStream
+}
+
+type broadcastLeaveStreamClient struct {
+	grpc.ClientStream
+}
+
+func (x *broadcastLeaveStreamClient) Recv() (*Message, error) {
+	m := new(Message)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *broadcastClient) BroadcastMessage(ctx context.Context, in *Message, opts ...grpc.CallOption) (*MessageResponse, error) {
+	out := new(MessageResponse)
 	err := c.cc.Invoke(ctx, "/proto.Broadcast/BroadcastMessage", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -75,8 +111,12 @@ func (c *broadcastClient) BroadcastMessage(ctx context.Context, in *Message, opt
 // All implementations must embed UnimplementedBroadcastServer
 // for forward compatibility
 type BroadcastServer interface {
-	CreateStream(*Connect, Broadcast_CreateStreamServer) error
-	BroadcastMessage(context.Context, *Message) (*Close, error)
+	// =JoinChannel
+	CreateStream(*Channel, Broadcast_CreateStreamServer) error
+	// = LeaveChannel
+	LeaveStream(*Channel, Broadcast_LeaveStreamServer) error
+	// =SendMessage
+	BroadcastMessage(context.Context, *Message) (*MessageResponse, error)
 	mustEmbedUnimplementedBroadcastServer()
 }
 
@@ -84,10 +124,13 @@ type BroadcastServer interface {
 type UnimplementedBroadcastServer struct {
 }
 
-func (UnimplementedBroadcastServer) CreateStream(*Connect, Broadcast_CreateStreamServer) error {
+func (UnimplementedBroadcastServer) CreateStream(*Channel, Broadcast_CreateStreamServer) error {
 	return status.Errorf(codes.Unimplemented, "method CreateStream not implemented")
 }
-func (UnimplementedBroadcastServer) BroadcastMessage(context.Context, *Message) (*Close, error) {
+func (UnimplementedBroadcastServer) LeaveStream(*Channel, Broadcast_LeaveStreamServer) error {
+	return status.Errorf(codes.Unimplemented, "method LeaveStream not implemented")
+}
+func (UnimplementedBroadcastServer) BroadcastMessage(context.Context, *Message) (*MessageResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BroadcastMessage not implemented")
 }
 func (UnimplementedBroadcastServer) mustEmbedUnimplementedBroadcastServer() {}
@@ -104,7 +147,7 @@ func RegisterBroadcastServer(s grpc.ServiceRegistrar, srv BroadcastServer) {
 }
 
 func _Broadcast_CreateStream_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(Connect)
+	m := new(Channel)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
@@ -121,6 +164,27 @@ type broadcastCreateStreamServer struct {
 }
 
 func (x *broadcastCreateStreamServer) Send(m *Message) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func _Broadcast_LeaveStream_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(Channel)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(BroadcastServer).LeaveStream(m, &broadcastLeaveStreamServer{stream})
+}
+
+type Broadcast_LeaveStreamServer interface {
+	Send(*Message) error
+	grpc.ServerStream
+}
+
+type broadcastLeaveStreamServer struct {
+	grpc.ServerStream
+}
+
+func (x *broadcastLeaveStreamServer) Send(m *Message) error {
 	return x.ServerStream.SendMsg(m)
 }
 
@@ -158,6 +222,11 @@ var Broadcast_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "CreateStream",
 			Handler:       _Broadcast_CreateStream_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "LeaveStream",
+			Handler:       _Broadcast_LeaveStream_Handler,
 			ServerStreams: true,
 		},
 	},

@@ -39,7 +39,8 @@ func main() {
 
 	server := &Server{connections}
 
-	grpcServer := grpc.NewServer()
+	var opts []grpc.ServerOption
+	grpcServer := grpc.NewServer(opts...)
 	listener, err := net.Listen("tcp", ":8080")
 	if err != nil {
 		log.Fatalf("error creating the server %v", err)

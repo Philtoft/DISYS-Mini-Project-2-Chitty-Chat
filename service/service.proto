@@ -3,25 +3,32 @@ syntax = "proto3";
 package proto;
 option go_package = "https://github.itu.dk/phhy/DIS2;time";
 
-message User {
-    string id = 1;
-    string name = 2;
+service Broadcast {
+    // =JoinChannel
+    rpc CreateStream(Channel) returns (stream Message){}
+    // = LeaveChannel
+    rpc LeaveStream(Channel) returns (stream Message){}
+    // =SendMessage
+    rpc BroadcastMessage(Message) returns (MessageResponse) {}
+}
+
+message Channel {
+    string name = 1;
+    // Could also be a User-message type
+    string sender_name = 2;
 }
 
 message Message {
-    string id = 1;
-    string content = 2;
-    string timestamp = 3;
+    string user = 1;
+    Channel channel = 2;
+    string message = 3;
+    int64 timestamp = 4;
 }
 
-message Connect {
-    User user = 1;
-    bool active = 2;
+message MessageResponse {
+    string messageResponse = 1;
 }
 
-message Close {}
-
-service Broadcast {
-    rpc CreateStream(Connect) returns (stream Message);
-    rpc BroadcastMessage(Message) returns (Close);
+message CloseResponse {
+    string leaveResponse = 1;
 }
