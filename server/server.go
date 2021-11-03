@@ -22,6 +22,11 @@ type Server struct {
 	rooms map[string][]chan *service.Message
 }
 
+type ChittyChat struct {
+	service.UnimplementedBroadcastServer
+	rooms map[string][]chan *service.Message
+}
+
 var grpcLog glog.LoggerV2
 
 func init() {
@@ -40,9 +45,14 @@ func main() {
 
 	grpcLog.Info("Starting server at port :9080")
 
-	service.RegisterBroadcastServer(grpcServer, &Server{
+	// service.RegisterBroadcastServer(grpcServer, &Server{
+	// 	rooms: make(map[string][]chan *service.Message),
+	// })
+
+	service.RegisterBroadcastServer(grpcServer, &ChittyChat{
 		rooms: make(map[string][]chan *service.Message),
 	})
+
 	if err := grpcServer.Serve(listener); err != nil {
 		log.Fatalf("Failed to serve %v", err)
 	}
