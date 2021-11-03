@@ -3,111 +3,97 @@ package main
 import (
 	"log"
 	"net"
-	"os"
+	"sync"
+	utils "utils"
 
-	service "github.com/Philtoft/DISYS-Mini-Project-2-Chitty-Chat/service"
+	service "service"
+
+	"github.com/Philtoft/DISYS-Mini-Project-2-Chitty-Chat/service"
 	"google.golang.org/grpc"
-	glog "google.golang.org/grpc/grpclog"
 )
 
-/*
-* TODO: Make connection into channels
-* TODO: Apply Lamport timestamp
- */
+var grpcServer *grpc.Server
+var serv *server
+var done chan int
+
+// Lamport clock
+var t = &utils.Lamport{T: 0}
+
+const (
+	participated string = "%v joined the chat at %v"
+	left         string = "%v has left the chat at %v"
+)
+
+type Connection struct {
+	stream service.Broadcast_CreateStreamServer
+	id     string
+	user   *service.User
+	active bool
+	error  chan error
+}
 
 type Server struct {
 	service.UnimplementedBroadcastServer
-	// Lav en key-value pair, hvor hver key har en række af channels som value, der sender data af typen *service.Message. Hvorfor?
-	// Repræsenterer åbenbart hvert chatrum
-	rooms map[string][]chan *service.Message
-}
-
-type ChittyChat struct {
-	service.UnimplementedBroadcastServer
-	rooms map[string][]chan *service.Message
-}
-
-var grpcLog glog.LoggerV2
-
-func init() {
-	grpcLog = glog.NewLoggerV2(os.Stdout, os.Stdout, os.Stdout)
+	connections []*Connection
+	mu          sync.Mutex
 }
 
 func main() {
 
+	done = make(chan int)
+
 	listener, err := net.Listen("tcp", ":9080")
 	if err != nil {
-		log.Fatalf("error creating the server %v", err)
+		log.Fatalf("Error creating the server %v", err)
 	}
 
-	var opts []grpc.ServerOption
-	grpcServer := grpc.NewServer(opts...)
+	grpcServer = grpc.NewServer()
 
-	grpcLog.Info("Starting server at port :9080")
+	grpcServer = grpc.NewServer()
 
-	// service.RegisterBroadcastServer(grpcServer, &Server{
-	// 	rooms: make(map[string][]chan *service.Message),
-	// })
+	serv = &Server{connections: make([]*Connection, 0)}
 
-	service.RegisterBroadcastServer(grpcServer, &ChittyChat{
-		rooms: make(map[string][]chan *service.Message),
-	})
+	service.RegisterBroadcastServer(grpcServer, serv)
 
-	if err := grpcServer.Serve(listener); err != nil {
-		log.Fatalf("Failed to serve %v", err)
-	}
+	defer func(listener net.Listener) {
+		err := listener.Close()
+		if err != nil {
+			log.Fatalf("Unknown error. :: %v", err)
+		}
+	}(listener)
+
+	go func(listener net.Listener) {
+		err := grpcServer.Serve(listener)
+		if err != nil {
+			log.Fatalf("Failted to start gRPC server: %v", err)
+		}
+	}(listener)
+
+	<-done
 
 }
 
-func (s *Server) CreateStream() {}
+func (s *Server) CreateStream(cr *service.ConnectRequest, stream service.Broadcast_CreateStreamServer) error {
+	t.MaxAndIncrement(1)
 
-func (s *Server) LeaveStream() {}
+	connection := newConnection(cr.User.Id, stream, cr.User)
 
-func (s *Server) BroadcastMessage() {}
+	s.addConnection(connection)
+}
 
-// func (s *Server) CreateStream(pconn *service.Connect, stream service.Broadcast_CreateStreamServer) error {
-// 	conn := &Connection{
-// 		stream: stream,
-// 		id:     pconn.User.Id,
-// 		active: true,
-// 		error:  make(chan error),
-// 	}
+func (s *Server) DisconnectStream() {}
 
-// 	s.Connection = append(s.Connection, conn)
+func newConnection(id string, stream service.Broadcast_CreateStreamServer, user *service.User) *Connection {
+	return &Connection{
+		id:     id,
+		stream: stream,
+		user:   user,
+		active: false,
+		error:  make(chan error),
+	}
+}
 
-// 	return <-conn.error
-
-// }
-
-// func (s *Server) BroadcastMessage(ctx context.Context, msg *service.Message) (*service.Close, error) {
-
-// 	wait := sync.WaitGroup{}
-// 	done := make(chan int)
-
-// 	for _, conn := range s.Connection {
-// 		wait.Add(1)
-
-// 		go func(msg *service.Message, conn *Connection) {
-// 			defer wait.Done()
-
-// 			if conn.active {
-// 				err := conn.stream.Send(msg)
-// 				grpcLog.Info("Sending message to: ", conn.stream)
-
-// 				if err != nil {
-// 					grpcLog.Errorf("Error with Stream: %v - Error: %v", conn.stream, err)
-// 					conn.active = false
-// 					conn.error <- err
-// 				}
-// 			}
-// 		}(msg, conn)
-// 	}
-
-// 	go func() {
-// 		wait.Wait()
-// 		close(done)
-// 	}()
-
-// 	<-done
-// 	return &service.Close{}, nil
-// }
+func (s *Server) addConnection(c *Connection) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+}
