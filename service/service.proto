@@ -6,11 +6,8 @@ option go_package = "./service";
 package proto;
 
 service Broadcast {
-    // =JoinChannel
     rpc CreateStream(Channel) returns (stream Message){}
-    // = LeaveChannel
     rpc LeaveStream(Channel) returns (stream Message){}
-    // =SendMessage
     rpc BroadcastMessage(Message) returns (MessageResponse) {}
 }
 
